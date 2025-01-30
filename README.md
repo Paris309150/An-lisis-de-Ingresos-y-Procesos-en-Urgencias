@@ -1,7 +1,3 @@
-Aquí tienes una descripción detallada y fiel a tu código para el archivo `README.md` de tu proyecto:
-
----
-
 # 📊 Análisis de Ingresos y Procesos en Urgencias
 
 Este proyecto permite visualizar y analizar los ingresos de pacientes en el **SAR Arpillerista Elsa Romo Aravena**, con el objetivo de identificar tendencias, optimizar la gestión de recursos y mejorar la eficiencia en la atención de urgencias.
