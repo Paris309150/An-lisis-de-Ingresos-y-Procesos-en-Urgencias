@@ -18,7 +18,7 @@ const datosTendencias = {
         },
         {
             label: "Turno 3",
-            data: [490, 31, 5, 15, 2],
+            data: [313, 19, 5, 15, 4],
             borderColor: "rgba(255, 99, 132, 1)",
             backgroundColor: "rgba(255, 99, 132, 0.2)",
             fill: true

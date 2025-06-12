@@ -20,9 +20,8 @@ Este proyecto permite visualizar y analizar los ingresos de pacientes en el **SA
 ```
 /analisis-ingresos-urgencias
 │── index.html      # Interfaz principal con gráficos
-│── styles.css      # Estilos para la visualización
-│── script.js       # Lógica de gráficos con Chart.js
-│── data/           # Datos anonimizados
+│── main.js         # Lógica de gráficos con Chart.js
+│── LICENSE         # Licencia del proyecto
 │── README.md       # Documentación del proyecto
 ```
 
