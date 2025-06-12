@@ -50,6 +50,27 @@
         Información correspondiente a los Turnos 1, 2 y 3 del SAR Arpillerista Elsa Romo Aravena.
     </div>
 
+    <!-- Formulario para ingresar datos manualmente -->
+    <div>
+        <h2>Ingreso de Datos</h2>
+        <form id="formDatos">
+            <label>Día: <input type="text" id="dia" required></label>
+            <label>Turno:
+                <select id="turno">
+                    <option value="1">Turno 1</option>
+                    <option value="2">Turno 2</option>
+                    <option value="3">Turno 3</option>
+                </select>
+            </label>
+            <label>Ingresos: <input type="number" id="ingresos" min="0" value="0"></label>
+            <label>Altas AD: <input type="number" id="altas" min="0" value="0"></label>
+            <label>Traslados Ambulancia: <input type="number" id="traslados" min="0" value="0"></label>
+            <label>Procedimiento Policial: <input type="number" id="policial" min="0" value="0"></label>
+            <label>Derivados al SAR: <input type="number" id="derivados" min="0" value="0"></label>
+            <button type="submit">Agregar</button>
+        </form>
+    </div>
+
     <!-- Gráficos Comparativos para Turnos 1, 2 y 3 -->
     <h2>Gráfico Comparativo - Turno 1 (Por Día)</h2>
     <canvas id="graficoTurno1Dias" width="400" height="200"></canvas>
@@ -82,7 +103,7 @@
         };
 
         const ctxTurno1 = document.getElementById('graficoTurno1Dias').getContext('2d');
-        new Chart(ctxTurno1, {
+        const chartTurno1 = new Chart(ctxTurno1, {
             type: 'bar',
             data: datosTurno1,
             options: { responsive: true, scales: { y: { beginAtZero: true } } }
@@ -101,7 +122,7 @@
         };
 
         const ctxTurno2 = document.getElementById('graficoTurno2Dias').getContext('2d');
-        new Chart(ctxTurno2, {
+        const chartTurno2 = new Chart(ctxTurno2, {
             type: 'bar',
             data: datosTurno2,
             options: { responsive: true, scales: { y: { beginAtZero: true } } }
@@ -120,7 +141,7 @@
         };
 
         const ctxTurno3 = document.getElementById('graficoTurno3Dias').getContext('2d');
-        new Chart(ctxTurno3, {
+        const chartTurno3 = new Chart(ctxTurno3, {
             type: 'bar',
             data: datosTurno3,
             options: { responsive: true, scales: { y: { beginAtZero: true } } }
@@ -206,10 +227,47 @@
         };
 
         const ctxTendencias = document.getElementById('graficoTendencias').getContext('2d');
-        new Chart(ctxTendencias, {
+        const chartTendencias = new Chart(ctxTendencias, {
             type: 'line',
             data: datosTendencias,
             options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        });
+
+        // Manejo del formulario de ingreso de datos
+        document.getElementById('formDatos').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const dia = document.getElementById('dia').value;
+            const turno = document.getElementById('turno').value;
+            const ingresos = parseInt(document.getElementById('ingresos').value) || 0;
+            const altas = parseInt(document.getElementById('altas').value) || 0;
+            const traslados = parseInt(document.getElementById('traslados').value) || 0;
+            const policial = parseInt(document.getElementById('policial').value) || 0;
+            const derivados = parseInt(document.getElementById('derivados').value) || 0;
+
+            let datos;
+            let grafico;
+            if (turno === '1') { datos = datosTurno1; grafico = chartTurno1; }
+            else if (turno === '2') { datos = datosTurno2; grafico = chartTurno2; }
+            else { datos = datosTurno3; grafico = chartTurno3; }
+
+            datos.labels.push(dia);
+            datos.datasets[0].data.push(ingresos);
+            datos.datasets[1].data.push(altas);
+            datos.datasets[2].data.push(traslados);
+            datos.datasets[3].data.push(policial);
+            datos.datasets[4].data.push(derivados);
+            grafico.update();
+
+            // Actualizar tendencia global
+            const idx = parseInt(turno) - 1;
+            datosTendencias.datasets[idx].data[0] += ingresos;
+            datosTendencias.datasets[idx].data[1] += altas;
+            datosTendencias.datasets[idx].data[2] += traslados;
+            datosTendencias.datasets[idx].data[3] += policial;
+            datosTendencias.datasets[idx].data[4] += derivados;
+            chartTendencias.update();
+
+            e.target.reset();
         });
     </script>
 </body>
