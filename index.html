@@ -464,7 +464,11 @@
                 ds.borderColor = paletas[tema]['borde'+(idx+1)];
                 ds.backgroundColor = paletas[tema]['borde'+(idx+1)+'Trans'];
             });
-            actualizarGraficos();
+            chartTurno1.update();
+            chartTurno2.update();
+            chartTurno3.update();
+            chartEstablecimientos.update();
+            chartTendencias.update();
         }
 
         function actualizarGraficos(inicio, fin) {
