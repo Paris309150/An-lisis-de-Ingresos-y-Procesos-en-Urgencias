@@ -10,9 +10,11 @@
             font-family: Arial, sans-serif;
             margin: 20px;
             line-height: 1.6;
+            background-color: #fff;
+            color: #333;
         }
         h1, h2 {
-            color: #333;
+            color: inherit;
         }
         canvas {
             display: block;
@@ -27,12 +29,30 @@
             font-weight: bold;
         }
         .summary {
-            background-color: #e8f5e9;
-            border: 1px solid #4caf50;
-            padding: 15px;
+            background-color: #f4f4f4;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 10px;
             margin: 15px 0;
-            font-weight: bold;
-            color: #2e7d32;
+            color: #333;
+        }
+        .alerta {
+            background-color: #dff0d8;
+            color: #3c763d;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            display: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: center;
         }
         .form-container {
             background-color: #fafafa;
@@ -69,6 +89,49 @@
         }
         .trend-container {
             overflow-x: auto;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+
+        /* Tema oscuro */
+        body.dark {
+            background-color: #121212;
+            color: #f0f0f0;
+        }
+        body.dark h1,
+        body.dark h2 {
+            color: #fff;
+        }
+        body.dark .summary {
+            background-color: #1e4620;
+            border-color: #388e3c;
+            color: #c8e6c9;
+        }
+        body.dark .highlight {
+            background-color: #333;
+            color: #f0f0f0;
+        }
+        body.dark .form-container {
+            background-color: #1f1f1f;
+            border-color: #555;
+        }
+        body.dark .trend-container {
+            background-color: #1f1f1f;
+            border-color: #555;
+        }
+        body.dark button {
+            background-color: #0d47a1;
+        }
+        body.dark button:hover {
+            background-color: #1565c0;
+        }
+        body.dark input,
+        body.dark select {
+            background-color: #333;
+            color: #f0f0f0;
+            border-color: #555;
         }
     </style>
 </head>
@@ -88,10 +151,19 @@
         Información correspondiente a los Turnos 1, 2 y 3 del SAR Arpillerista Elsa Romo Aravena.
     </div>
 
+    <!-- Selección de tema -->
+    <label>Modo de color:
+        <select id="selectorTema">
+            <option value="claro">Claro</option>
+            <option value="oscuro">Oscuro</option>
+        </select>
+    </label>
+
     <!-- Formulario para ingresar datos manualmente -->
     <div class="form-container">
         <h2>Ingreso de Datos</h2>
         <form id="formDatos">
+            <input type="hidden" id="indiceEdicion">
             <label>Día: <input type="date" id="dia" required></label>
             <label>Turno:
                 <select id="turno">
@@ -105,9 +177,29 @@
             <label>Traslados Ambulancia: <input type="number" id="traslados" min="0" value="0"></label>
             <label>Procedimiento Policial: <input type="number" id="policial" min="0" value="0"></label>
             <label>Derivados al SAR: <input type="number" id="derivados" min="0" value="0"></label>
-            <button type="submit">Agregar</button>
+            <button type="submit">Guardar</button>
         </form>
+
+        <div id="alertaIngreso" class="alerta">Datos guardados</div>
     </div>
+
+    <h2>Registros</h2>
+    <table id="tablaRegistros">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Turno</th>
+                <th>Ingresos</th>
+                <th>Altas AD</th>
+                <th>Traslados</th>
+                <th>Proced. Policial</th>
+                <th>Derivados</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <button id="limpiarRegistros">Eliminar Todos</button>
 
     <!-- Selección de gráfico por turno -->
     <label>Ver gráfico de:
@@ -121,17 +213,17 @@
     <!-- Gráficos Comparativos para Turnos 1, 2 y 3 -->
     <div id="graficoTurno1Container" class="grafico-turno">
         <h2>Gráfico Comparativo - Turno 1 (Por Día)</h2>
-        <canvas id="graficoTurno1Dias" width="400" height="200"></canvas>
+        <canvas id="graficoTurno1Dias" width="600" height="300"></canvas>
     </div>
 
     <div id="graficoTurno2Container" class="grafico-turno">
         <h2>Gráfico Comparativo - Turno 2 (Por Día)</h2>
-        <canvas id="graficoTurno2Dias" width="400" height="200"></canvas>
+        <canvas id="graficoTurno2Dias" width="600" height="300"></canvas>
     </div>
 
     <div id="graficoTurno3Container" class="grafico-turno">
         <h2>Gráfico Comparativo - Turno 3 (Por Día)</h2>
-        <canvas id="graficoTurno3Dias" width="400" height="200"></canvas>
+        <canvas id="graficoTurno3Dias" width="600" height="300"></canvas>
     </div>
 
     <!-- Gráfico de Consolidado por Establecimiento -->
@@ -140,67 +232,131 @@
 
     <!-- Gráfico de Tendencias -->
     <h2>Gráfico de Tendencias</h2>
+    <label>Ver:
+        <select id="seleccionTendencia">
+            <option value="todos">Todos los turnos</option>
+            <option value="1">Turno 1</option>
+            <option value="2">Turno 2</option>
+            <option value="3">Turno 3</option>
+        </select>
+    </label>
+    <div>
+        <label>Desde: <input type="date" id="inicioRango"></label>
+        <label>Hasta: <input type="date" id="finRango"></label>
+        <button id="aplicarRango">Aplicar rango</button>
+    </div>
     <div class="trend-container">
-        <canvas id="graficoTendencias" width="600" height="200"></canvas>
+        <canvas id="graficoTendencias" width="600" height="300"></canvas>
     </div>
 
     <script>
-        // Gráfico Comparativo - Turno 1 (Por Día)
-        const datosTurno1 = {
-            labels: ["02-12", "05-12", "07-12 20:00-08:00", "09-12", "12-12", "14-12 20:00-08:00", "16-12", "19-12", "21-12 20:00-08:00", "23-12", "25-12 20:00-08:00"],
-            datasets: [
-                { label: "Ingresos", data: [60, 53, 30, 69, 53, 31, 59, 63, 31, 79, 37], backgroundColor: "rgba(75, 192, 192, 0.6)" },
-                { label: "Altas AD", data: [19, 14, 0, 12, 1, 0, 3, 3, 0, 5, 1], backgroundColor: "rgba(54, 162, 235, 0.6)" },
-                { label: "Traslados Ambulancia", data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], backgroundColor: "rgba(255, 206, 86, 0.6)" },
-                { label: "Procedimiento Policial", data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], backgroundColor: "rgba(153, 102, 255, 0.6)" },
-                { label: "Derivados al SAR", data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], backgroundColor: "rgba(255, 99, 132, 0.6)" }
-            ]
+    document.addEventListener('DOMContentLoaded', function() {
+        const paletas = {
+            claro: {
+                ingresos: 'rgba(75, 192, 192, 0.6)',
+                altas: 'rgba(54, 162, 235, 0.6)',
+                traslados: 'rgba(255, 206, 86, 0.6)',
+                policial: 'rgba(153, 102, 255, 0.6)',
+                derivados: 'rgba(255, 99, 132, 0.6)',
+                borde1: 'rgba(54, 162, 235, 1)',
+                borde1Trans: 'rgba(54, 162, 235, 0.2)',
+                borde2: 'rgba(75, 192, 192, 1)',
+                borde2Trans: 'rgba(75, 192, 192, 0.2)',
+                borde3: 'rgba(255, 206, 86, 1)',
+                borde3Trans: 'rgba(255, 206, 86, 0.2)'
+            },
+            oscuro: {
+                ingresos: 'rgba(0, 150, 136, 0.8)',
+                altas: 'rgba(33, 150, 243, 0.8)',
+                traslados: 'rgba(255, 179, 0, 0.8)',
+                policial: 'rgba(156, 39, 176, 0.8)',
+                derivados: 'rgba(244, 67, 54, 0.8)',
+                borde1: 'rgba(33, 150, 243, 1)',
+                borde1Trans: 'rgba(33, 150, 243, 0.3)',
+                borde2: 'rgba(0, 150, 136, 1)',
+                borde2Trans: 'rgba(0, 150, 136, 0.3)',
+                borde3: 'rgba(255, 179, 0, 1)',
+                borde3Trans: 'rgba(255, 179, 0, 0.3)'
+            }
         };
+
+        let temaActual = 'claro';
+
+        // Registros históricos
+        const registros = [
+            {fecha:'2024-12-02', turno:'1', ingresos:60, altas:19, traslados:0, policial:0, derivados:0},
+            {fecha:'2024-12-05', turno:'1', ingresos:53, altas:14, traslados:0, policial:0, derivados:0},
+            {fecha:'2024-12-07', turno:'1', ingresos:30, altas:0, traslados:0, policial:0, derivados:0},
+            {fecha:'2024-12-09', turno:'1', ingresos:69, altas:12, traslados:0, policial:0, derivados:0},
+            {fecha:'2024-12-12', turno:'1', ingresos:53, altas:1, traslados:0, policial:0, derivados:0},
+            {fecha:'2024-12-14', turno:'1', ingresos:31, altas:0, traslados:0, policial:0, derivados:0},
+            {fecha:'2024-12-16', turno:'1', ingresos:59, altas:3, traslados:0, policial:0, derivados:0},
+            {fecha:'2024-12-19', turno:'1', ingresos:63, altas:3, traslados:0, policial:0, derivados:0},
+            {fecha:'2024-12-21', turno:'1', ingresos:31, altas:0, traslados:0, policial:0, derivados:0},
+            {fecha:'2024-12-23', turno:'1', ingresos:79, altas:5, traslados:0, policial:0, derivados:0},
+            {fecha:'2024-12-25', turno:'1', ingresos:37, altas:1, traslados:0, policial:0, derivados:0},
+
+            {fecha:'2024-12-03', turno:'2', ingresos:66, altas:17, traslados:1, policial:4, derivados:0},
+            {fecha:'2024-12-06', turno:'2', ingresos:70, altas:14, traslados:1, policial:4, derivados:0},
+            {fecha:'2024-12-08', turno:'2', ingresos:68, altas:1, traslados:5, policial:3, derivados:2},
+            {fecha:'2024-12-10', turno:'2', ingresos:55, altas:1, traslados:1, policial:1, derivados:2},
+            {fecha:'2024-12-13', turno:'2', ingresos:48, altas:0, traslados:2, policial:3, derivados:0},
+            {fecha:'2024-12-15', turno:'2', ingresos:48, altas:2, traslados:0, policial:2, derivados:4},
+            {fecha:'2024-12-17', turno:'2', ingresos:54, altas:6, traslados:1, policial:4, derivados:0},
+            {fecha:'2024-12-20', turno:'2', ingresos:48, altas:4, traslados:0, policial:3, derivados:1},
+            {fecha:'2024-12-22', turno:'2', ingresos:69, altas:0, traslados:1, policial:6, derivados:1},
+            {fecha:'2024-12-24', turno:'2', ingresos:39, altas:5, traslados:2, policial:2, derivados:1},
+            {fecha:'2024-12-26', turno:'2', ingresos:94, altas:3, traslados:3, policial:2, derivados:0},
+
+            {fecha:'2024-12-04', turno:'3', ingresos:52, altas:3, traslados:0, policial:0, derivados:0},
+            {fecha:'2024-12-07', turno:'3', ingresos:54, altas:1, traslados:0, policial:0, derivados:0},
+            {fecha:'2024-12-14', turno:'3', ingresos:59, altas:4, traslados:1, policial:6, derivados:0},
+            {fecha:'2024-12-15', turno:'3', ingresos:39, altas:0, traslados:0, policial:5, derivados:3},
+            {fecha:'2024-12-18', turno:'3', ingresos:65, altas:9, traslados:2, policial:4, derivados:1},
+            {fecha:'2024-12-21', turno:'3', ingresos:44, altas:0, traslados:0, policial:0, derivados:0}
+        ];
+
+        function crearDatosTurno(turno) {
+            const labels = [];
+            const ingresos = [];
+            const altas = [];
+            const traslados = [];
+            const policial = [];
+            const derivados = [];
+            registros.forEach(r => {
+                if (r.turno === turno) {
+                    labels.push(r.fecha.substring(5));
+                    ingresos.push(r.ingresos);
+                    altas.push(r.altas);
+                    traslados.push(r.traslados);
+                    policial.push(r.policial);
+                    derivados.push(r.derivados);
+                }
+            });
+            return {
+                labels,
+                datasets: [
+                    { label: 'Ingresos', data: ingresos, backgroundColor: paletas[temaActual].ingresos },
+                    { label: 'Altas AD', data: altas, backgroundColor: paletas[temaActual].altas },
+                    { label: 'Traslados Ambulancia', data: traslados, backgroundColor: paletas[temaActual].traslados },
+                    { label: 'Procedimiento Policial', data: policial, backgroundColor: paletas[temaActual].policial },
+                    { label: 'Derivados al SAR', data: derivados, backgroundColor: paletas[temaActual].derivados }
+                ]
+            };
+        }
+
+        let datosTurno1 = crearDatosTurno('1');
+        let datosTurno2 = crearDatosTurno('2');
+        let datosTurno3 = crearDatosTurno('3');
 
         const ctxTurno1 = document.getElementById('graficoTurno1Dias').getContext('2d');
-        const chartTurno1 = new Chart(ctxTurno1, {
-            type: 'bar',
-            data: datosTurno1,
-            options: { responsive: true, scales: { y: { beginAtZero: true } } }
-        });
-
-        // Gráfico Comparativo - Turno 2 (Por Día)
-        const datosTurno2 = {
-            labels: ["03-12", "06-12", "08-12", "10-12", "13-12", "15-12", "17-12", "20-12", "22-12 (08:00-20:00)", "24-12", "26-12"],
-            datasets: [
-                { label: "Ingresos", data: [66, 70, 68, 55, 48, 48, 54, 48, 69, 39, 94], backgroundColor: "rgba(75, 192, 192, 0.6)" },
-                { label: "Altas AD", data: [17, 14, 1, 1, 0, 2, 6, 4, 0, 5, 3], backgroundColor: "rgba(54, 162, 235, 0.6)" },
-                { label: "Traslados Ambulancia", data: [1, 1, 5, 1, 2, 0, 1, 0, 1, 2, 3], backgroundColor: "rgba(255, 206, 86, 0.6)" },
-                { label: "Procedimiento Policial", data: [4, 4, 3, 1, 3, 2, 4, 3, 6, 2, 2], backgroundColor: "rgba(153, 102, 255, 0.6)" },
-                { label: "Derivados al SAR", data: [0, 0, 2, 2, 0, 4, 0, 1, 1, 1, 0], backgroundColor: "rgba(255, 99, 132, 0.6)" }
-            ]
-        };
+        const chartTurno1 = new Chart(ctxTurno1, { type: 'bar', data: datosTurno1, options: { responsive: true, scales: { y: { beginAtZero: true } } } });
 
         const ctxTurno2 = document.getElementById('graficoTurno2Dias').getContext('2d');
-        const chartTurno2 = new Chart(ctxTurno2, {
-            type: 'bar',
-            data: datosTurno2,
-            options: { responsive: true, scales: { y: { beginAtZero: true } } }
-        });
-
-        // Gráfico Comparativo - Turno 3 (Por Día)
-        const datosTurno3 = {
-            labels: ["04-12", "07-12", "14-12", "15-12", "18-12", "21-12"],
-            datasets: [
-                { label: "Ingresos", data: [52, 54, 59, 39, 65, 44], backgroundColor: "rgba(75, 192, 192, 0.6)" },
-                { label: "Altas AD", data: [3, 1, 4, 0, 9, 0], backgroundColor: "rgba(54, 162, 235, 0.6)" },
-                { label: "Traslados Ambulancia", data: [0, 0, 1, 0, 2, 0], backgroundColor: "rgba(255, 206, 86, 0.6)" },
-                { label: "Procedimiento Policial", data: [0, 0, 6, 5, 4, 0], backgroundColor: "rgba(153, 102, 255, 0.6)" },
-                { label: "Derivados al SAR", data: [0, 0, 0, 3, 1, 0], backgroundColor: "rgba(255, 99, 132, 0.6)" }
-            ]
-        };
+        const chartTurno2 = new Chart(ctxTurno2, { type: 'bar', data: datosTurno2, options: { responsive: true, scales: { y: { beginAtZero: true } } } });
 
         const ctxTurno3 = document.getElementById('graficoTurno3Dias').getContext('2d');
-        const chartTurno3 = new Chart(ctxTurno3, {
-            type: 'bar',
-            data: datosTurno3,
-            options: { responsive: true, scales: { y: { beginAtZero: true } } }
-        });
+        const chartTurno3 = new Chart(ctxTurno3, { type: 'bar', data: datosTurno3, options: { responsive: true, scales: { y: { beginAtZero: true } } } });
 
         // Gráfico de Consolidado por Establecimiento
         const labelsEstablecimientos = [
@@ -228,14 +384,14 @@
         ];
 
         const ctxEstablecimientos = document.getElementById('graficoEstablecimientos').getContext('2d');
-        new Chart(ctxEstablecimientos, {
+        const chartEstablecimientos = new Chart(ctxEstablecimientos, {
             type: 'bar',
             data: {
                 labels: labelsEstablecimientos,
                 datasets: [{
                     label: "Pacientes por Establecimiento",
                     data: dataEstablecimientos,
-                    backgroundColor: "rgba(75, 192, 192, 0.6)"
+                    backgroundColor: paletas[temaActual].ingresos
                 }]
             },
             options: {
@@ -253,40 +409,117 @@
             }
         });
 
-        // Gráfico de Tendencias
-        const datosTendencias = {
-            labels: ["Ingresos", "Altas AD", "Traslados Ambulancia", "Procedimiento Policial", "Derivados al SAR"],
-            datasets: [
-                {
-                    label: "Turno 1",
-                    data: [526, 43, 0, 0, 0],
-                    borderColor: "rgba(54, 162, 235, 1)",
-                    backgroundColor: "rgba(54, 162, 235, 0.2)",
-                    fill: true
-                },
-                {
-                    label: "Turno 2",
-                    data: [678, 49, 14, 30, 11],
-                    borderColor: "rgba(75, 192, 192, 1)",
-                    backgroundColor: "rgba(75, 192, 192, 0.2)",
-                    fill: true
-                },
-                {
-                    label: "Turno 3",
-                    data: [313, 19, 5, 15, 4],
-                    borderColor: "rgba(255, 206, 86, 1)",
-                    backgroundColor: "rgba(255, 206, 86, 0.2)",
-                    fill: true
-                }
-            ]
-        };
+        function crearDatosTendencias(inicio, fin) {
+            const base = [0, 0, 0, 0, 0];
+            const t1 = base.slice();
+            const t2 = base.slice();
+            const t3 = base.slice();
+            registros.forEach(r => {
+                const f = new Date(r.fecha);
+                if ((inicio && f < inicio) || (fin && f > fin)) return;
+                const idx = parseInt(r.turno) - 1;
+                const dest = idx === 0 ? t1 : idx === 1 ? t2 : t3;
+                dest[0] += r.ingresos;
+                dest[1] += r.altas;
+                dest[2] += r.traslados;
+                dest[3] += r.policial;
+                dest[4] += r.derivados;
+            });
+            return {
+                labels: ['Ingresos', 'Altas AD', 'Traslados Ambulancia', 'Procedimiento Policial', 'Derivados al SAR'],
+                datasets: [
+                    { label: 'Turno 1', data: t1, borderColor: paletas[temaActual].borde1, backgroundColor: paletas[temaActual].borde1Trans, fill: true },
+                    { label: 'Turno 2', data: t2, borderColor: paletas[temaActual].borde2, backgroundColor: paletas[temaActual].borde2Trans, fill: true },
+                    { label: 'Turno 3', data: t3, borderColor: paletas[temaActual].borde3, backgroundColor: paletas[temaActual].borde3Trans, fill: true }
+                ]
+            };
+        }
+
+        let datosTendencias = crearDatosTendencias();
 
         const ctxTendencias = document.getElementById('graficoTendencias').getContext('2d');
         const chartTendencias = new Chart(ctxTendencias, {
             type: 'line',
             data: datosTendencias,
-            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, grid: { display: false } },
+                    x: { grid: { display: false } }
+                }
+            }
         });
+
+        function aplicarTema(tema) {
+            temaActual = tema;
+            document.body.classList.toggle('dark', tema === 'oscuro');
+            [datosTurno1, datosTurno2, datosTurno3].forEach(ds => {
+                ds.datasets.forEach((d, i) => {
+                    const key = ['ingresos','altas','traslados','policial','derivados'][i];
+                    d.backgroundColor = paletas[tema][key];
+                });
+            });
+            chartEstablecimientos.data.datasets[0].backgroundColor = paletas[tema].ingresos;
+            datosTendencias.datasets.forEach((ds, idx) => {
+                ds.borderColor = paletas[tema]['borde'+(idx+1)];
+                ds.backgroundColor = paletas[tema]['borde'+(idx+1)+'Trans'];
+            });
+            actualizarGraficos();
+        }
+
+        function actualizarGraficos(inicio, fin) {
+            datosTurno1 = crearDatosTurno('1');
+            datosTurno2 = crearDatosTurno('2');
+            datosTurno3 = crearDatosTurno('3');
+            chartTurno1.data = datosTurno1;
+            chartTurno2.data = datosTurno2;
+            chartTurno3.data = datosTurno3;
+
+            datosTendencias = crearDatosTendencias(inicio, fin);
+            chartTendencias.data = datosTendencias;
+            chartTurno1.update();
+            chartTurno2.update();
+            chartTurno3.update();
+            chartTendencias.update();
+            chequearAlertas();
+            renderTabla();
+        }
+
+        function chequearAlertas() {
+            datosTendencias.datasets.forEach((ds, idx) => {
+                const ing = ds.data[0];
+                const alt = ds.data[1];
+                if (ing && alt / ing > 0.1) {
+                    alert(`Alerta: Turno ${idx+1} supera 10% de altas AD`);
+                }
+            });
+            const totalIng = datosTendencias.datasets.reduce((a,d)=>a+d.data[0],0);
+            const totalAlt = datosTendencias.datasets.reduce((a,d)=>a+d.data[1],0);
+            if (totalIng && totalAlt / totalIng > 0.1) {
+                alert('Alerta: Consolidado supera 10% de altas AD');
+            }
+        }
+
+        function renderTabla() {
+            const tbody = document.querySelector('#tablaRegistros tbody');
+            tbody.innerHTML = '';
+            registros.forEach((r,i)=>{
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${r.fecha}</td><td>${r.turno}</td><td>${r.ingresos}</td><td>${r.altas}</td><td>${r.traslados}</td><td>${r.policial}</td><td>${r.derivados}</td><td><button class="editar" data-i="${i}">Editar</button> <button class="eliminar" data-i="${i}">Eliminar</button></td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Controlar la visualización de las tendencias por turno
+        const selectTendencia = document.getElementById('seleccionTendencia');
+        function mostrarTendencia(valor) {
+            chartTendencias.data.datasets.forEach((ds, idx) => {
+                ds.hidden = valor !== 'todos' && valor !== String(idx + 1);
+            });
+            chartTendencias.update();
+        }
+        selectTendencia.addEventListener('change', e => mostrarTendencia(e.target.value));
+        mostrarTendencia(selectTendencia.value);
 
         // Controlar la visualización de los gráficos por turno
         const selectTurno = document.getElementById('seleccionTurno');
@@ -307,6 +540,11 @@
         // Mostrar por defecto el primer turno
         mostrarTurno(selectTurno.value);
 
+        // Cambio de tema
+        const selectTema = document.getElementById('selectorTema');
+        selectTema.addEventListener('change', e => aplicarTema(e.target.value));
+        aplicarTema(selectTema.value);
+
         // Manejo del formulario de ingreso de datos
         document.getElementById('formDatos').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -317,32 +555,55 @@
             const traslados = parseInt(document.getElementById('traslados').value) || 0;
             const policial = parseInt(document.getElementById('policial').value) || 0;
             const derivados = parseInt(document.getElementById('derivados').value) || 0;
+            const idxEdit = document.getElementById('indiceEdicion').value;
 
-            let datos;
-            let grafico;
-            if (turno === '1') { datos = datosTurno1; grafico = chartTurno1; }
-            else if (turno === '2') { datos = datosTurno2; grafico = chartTurno2; }
-            else { datos = datosTurno3; grafico = chartTurno3; }
-
-            datos.labels.push(dia);
-            datos.datasets[0].data.push(ingresos);
-            datos.datasets[1].data.push(altas);
-            datos.datasets[2].data.push(traslados);
-            datos.datasets[3].data.push(policial);
-            datos.datasets[4].data.push(derivados);
-            grafico.update();
-
-            // Actualizar tendencia global
-            const idx = parseInt(turno) - 1;
-            datosTendencias.datasets[idx].data[0] += ingresos;
-            datosTendencias.datasets[idx].data[1] += altas;
-            datosTendencias.datasets[idx].data[2] += traslados;
-            datosTendencias.datasets[idx].data[3] += policial;
-            datosTendencias.datasets[idx].data[4] += derivados;
-            chartTendencias.update();
-
+            const registro = {fecha: dia, turno, ingresos, altas, traslados, policial, derivados};
+            if (idxEdit) {
+                registros[idxEdit] = registro;
+            } else {
+                registros.push(registro);
+            }
+            document.getElementById('indiceEdicion').value = '';
+            actualizarGraficos();
+            document.getElementById('alertaIngreso').style.display = 'block';
+            setTimeout(()=>{document.getElementById('alertaIngreso').style.display='none';},2000);
             e.target.reset();
         });
+
+        document.getElementById('tablaRegistros').addEventListener('click', function(e){
+            const i = e.target.dataset.i;
+            if (e.target.classList.contains('eliminar')) {
+                registros.splice(i,1);
+                actualizarGraficos();
+            } else if (e.target.classList.contains('editar')) {
+                const r = registros[i];
+                document.getElementById('dia').value = r.fecha;
+                document.getElementById('turno').value = r.turno;
+                document.getElementById('ingresos').value = r.ingresos;
+                document.getElementById('altas').value = r.altas;
+                document.getElementById('traslados').value = r.traslados;
+                document.getElementById('policial').value = r.policial;
+                document.getElementById('derivados').value = r.derivados;
+                document.getElementById('indiceEdicion').value = i;
+            }
+        });
+
+        document.getElementById('limpiarRegistros').addEventListener('click', function(){
+            registros.length = 0;
+            actualizarGraficos();
+        });
+
+        document.getElementById('aplicarRango').addEventListener('click', function(){
+            const iniVal = document.getElementById('inicioRango').value;
+            const finVal = document.getElementById('finRango').value;
+            const ini = iniVal ? new Date(iniVal) : null;
+            const fin = finVal ? new Date(finVal) : null;
+            actualizarGraficos(ini, fin);
+        });
+
+        renderTabla();
+        aplicarTema(selectTema.value);
+    });
     </script>
 </body>
 </html>
