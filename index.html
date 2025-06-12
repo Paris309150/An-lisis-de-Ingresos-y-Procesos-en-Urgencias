@@ -15,7 +15,9 @@
             color: #333;
         }
         canvas {
-            margin-top: 20px;
+            display: block;
+            margin: 20px auto;
+            max-width: 100%;
         }
         .highlight {
             background-color: #f8f8f8;
@@ -31,6 +33,36 @@
             margin: 15px 0;
             font-weight: bold;
             color: #2e7d32;
+        }
+        .form-container {
+            background-color: #fafafa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+        .form-container form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .form-container label {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 45%;
+        }
+        .form-container button {
+            align-self: flex-start;
+            padding: 10px 20px;
+            background-color: #2196F3;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .form-container button:hover {
+            background-color: #1976D2;
         }
     </style>
 </head>
@@ -51,7 +83,7 @@
     </div>
 
     <!-- Formulario para ingresar datos manualmente -->
-    <div>
+    <div class="form-container">
         <h2>Ingreso de Datos</h2>
         <form id="formDatos">
             <label>Día: <input type="text" id="dia" required></label>
