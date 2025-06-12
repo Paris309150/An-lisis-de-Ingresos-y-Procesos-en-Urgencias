@@ -64,6 +64,12 @@
         .form-container button:hover {
             background-color: #1976D2;
         }
+        .grafico-turno {
+            display: none;
+        }
+        .trend-container {
+            overflow-x: auto;
+        }
     </style>
 </head>
 <body>
@@ -86,7 +92,7 @@
     <div class="form-container">
         <h2>Ingreso de Datos</h2>
         <form id="formDatos">
-            <label>Día: <input type="text" id="dia" required></label>
+            <label>Día: <input type="date" id="dia" required></label>
             <label>Turno:
                 <select id="turno">
                     <option value="1">Turno 1</option>
@@ -103,15 +109,30 @@
         </form>
     </div>
 
+    <!-- Selección de gráfico por turno -->
+    <label>Ver gráfico de:
+        <select id="seleccionTurno">
+            <option value="1">Turno 1</option>
+            <option value="2">Turno 2</option>
+            <option value="3">Turno 3</option>
+        </select>
+    </label>
+
     <!-- Gráficos Comparativos para Turnos 1, 2 y 3 -->
-    <h2>Gráfico Comparativo - Turno 1 (Por Día)</h2>
-    <canvas id="graficoTurno1Dias" width="400" height="200"></canvas>
+    <div id="graficoTurno1Container" class="grafico-turno">
+        <h2>Gráfico Comparativo - Turno 1 (Por Día)</h2>
+        <canvas id="graficoTurno1Dias" width="400" height="200"></canvas>
+    </div>
 
-    <h2>Gráfico Comparativo - Turno 2 (Por Día)</h2>
-    <canvas id="graficoTurno2Dias" width="400" height="200"></canvas>
+    <div id="graficoTurno2Container" class="grafico-turno">
+        <h2>Gráfico Comparativo - Turno 2 (Por Día)</h2>
+        <canvas id="graficoTurno2Dias" width="400" height="200"></canvas>
+    </div>
 
-    <h2>Gráfico Comparativo - Turno 3 (Por Día)</h2>
-    <canvas id="graficoTurno3Dias" width="400" height="200"></canvas>
+    <div id="graficoTurno3Container" class="grafico-turno">
+        <h2>Gráfico Comparativo - Turno 3 (Por Día)</h2>
+        <canvas id="graficoTurno3Dias" width="400" height="200"></canvas>
+    </div>
 
     <!-- Gráfico de Consolidado por Establecimiento -->
     <h2>Gráfico de Consolidado por Establecimiento</h2>
@@ -119,7 +140,9 @@
 
     <!-- Gráfico de Tendencias -->
     <h2>Gráfico de Tendencias</h2>
-    <canvas id="graficoTendencias" width="400" height="200"></canvas>
+    <div class="trend-container">
+        <canvas id="graficoTendencias" width="600" height="200"></canvas>
+    </div>
 
     <script>
         // Gráfico Comparativo - Turno 1 (Por Día)
@@ -264,6 +287,25 @@
             data: datosTendencias,
             options: { responsive: true, scales: { y: { beginAtZero: true } } }
         });
+
+        // Controlar la visualización de los gráficos por turno
+        const selectTurno = document.getElementById('seleccionTurno');
+        const contenedoresTurno = {
+            '1': document.getElementById('graficoTurno1Container'),
+            '2': document.getElementById('graficoTurno2Container'),
+            '3': document.getElementById('graficoTurno3Container')
+        };
+
+        function mostrarTurno(valor) {
+            Object.values(contenedoresTurno).forEach(c => c.style.display = 'none');
+            if (contenedoresTurno[valor]) {
+                contenedoresTurno[valor].style.display = 'block';
+            }
+        }
+
+        selectTurno.addEventListener('change', e => mostrarTurno(e.target.value));
+        // Mostrar por defecto el primer turno
+        mostrarTurno(selectTurno.value);
 
         // Manejo del formulario de ingreso de datos
         document.getElementById('formDatos').addEventListener('submit', function(e) {
